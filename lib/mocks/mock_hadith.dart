@@ -97,7 +97,7 @@ final mockHadiths = [
     'childExplanation':
         'Kardeşine, küçük arkadaşlarına nazik davranmak Hz. Peygamber\'in emridir. Güçlü olan küçüğü korur ve sever.',
     'isLearned': false,
-    'isUnlocked': false,
+    'isUnlocked': true,
     'audioUrl': null,
   },
   {
@@ -111,7 +111,7 @@ final mockHadiths = [
     'childExplanation':
         'Namaz kılmak, dua etmek çok güzeldir. Ama bunların yanında güzel ahlak — dürüstlük, nezaket, yardımseverlik — imanı tamamlar.',
     'isLearned': false,
-    'isUnlocked': false,
+    'isUnlocked': true,
     'audioUrl': null,
   },
 ];

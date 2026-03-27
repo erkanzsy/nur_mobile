@@ -7,7 +7,6 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../mocks/mock_surahs.dart';
 import '../../../mocks/mock_progress.dart';
 import '../../../shared/widgets/arabic_text.dart';
-import '../../../shared/widgets/locked_content_sheet.dart';
 import '../../../shared/widgets/progress_bar.dart';
 import '../../../shared/widgets/star_rating.dart';
 
@@ -18,7 +17,7 @@ class SurahListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final surahs = mockSurahs;
     final completed = mockProgress['surahsCompleted'] as int;
-    final total = mockProgress['surahsTotal'] as int;
+    final total = surahs.length;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -88,7 +87,6 @@ class _SurahListHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              // Progress donut gösterge
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -129,55 +127,40 @@ class _SurahCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnlocked = surah['isUnlocked'] as bool;
     final progress = surah['progress'] as double;
     final stars = surah['starsEarned'] as int;
 
     return GestureDetector(
-      onTap: () {
-        if (isUnlocked) {
-          context.go('/child/surahs/${surah['id']}');
-        } else {
-          LockedContentSheet.show(context);
-        }
-      },
+      onTap: () => context.go('/child/surahs/${surah['id']}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isUnlocked ? AppColors.white : AppColors.surface,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isUnlocked ? Colors.transparent : AppColors.border,
-          ),
-          boxShadow: isUnlocked
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2C2C2A).withValues(alpha: 0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C2C2A).withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            // Numara / kilit
+            // Numara
             Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isUnlocked ? AppColors.primaryBg : AppColors.border,
+                color: AppColors.primaryBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: isUnlocked
-                    ? Text(
-                        '${index + 1}',
-                        style: AppTextStyles.titleMedium
-                            .copyWith(color: AppColors.primary),
-                      )
-                    : const Icon(Icons.lock_rounded,
-                        color: AppColors.textMuted, size: 18),
+                child: Text(
+                  '${index + 1}',
+                  style: AppTextStyles.titleMedium
+                      .copyWith(color: AppColors.primary),
+                ),
               ),
             ),
 
@@ -194,26 +177,9 @@ class _SurahCard extends StatelessWidget {
                       ArabicText(
                         surah['nameAr'] as String,
                         fontSize: 18,
-                        color: isUnlocked
-                            ? AppColors.textPrimary
-                            : AppColors.textMuted,
+                        color: AppColors.textPrimary,
                       ),
-                      if (isUnlocked && stars > 0)
-                        StarRating(stars: stars, size: 16),
-                      if (!isUnlocked)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.border,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Pro',
-                            style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.textMuted),
-                          ),
-                        ),
+                      if (stars > 0) StarRating(stars: stars, size: 16),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -223,7 +189,7 @@ class _SurahCard extends StatelessWidget {
                       color: AppColors.textMuted,
                     ),
                   ),
-                  if (isUnlocked && progress > 0) ...[
+                  if (progress > 0) ...[
                     const SizedBox(height: AppSpacing.sm),
                     ProgressBar(value: progress),
                   ],
@@ -231,11 +197,9 @@ class _SurahCard extends StatelessWidget {
               ),
             ),
 
-            if (isUnlocked) ...[
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textMuted),
-            ],
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted),
           ],
         ),
       ),

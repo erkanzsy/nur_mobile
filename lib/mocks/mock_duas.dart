@@ -37,7 +37,7 @@ final mockDuas = [
     'transliteration': 'Elhamdülillahillezi et\'amena',
     'turkish': 'Bizi doyuran Allah\'a hamdolsun.',
     'isLearned': false,
-    'isUnlocked': false,
+    'isUnlocked': true,
   },
   {
     'id': 'before-sleep',
@@ -47,7 +47,7 @@ final mockDuas = [
     'transliteration': 'Bismikallahümme emutü ve ahya',
     'turkish': 'Senin adınla ölür ve dirilim.',
     'isLearned': false,
-    'isUnlocked': false,
+    'isUnlocked': true,
   },
   {
     'id': 'after-waking',
@@ -57,6 +57,6 @@ final mockDuas = [
     'transliteration': 'Elhamdülillahillezi ahyana',
     'turkish': 'Bizi dirilten Allah\'a hamdolsun.',
     'isLearned': false,
-    'isUnlocked': false,
+    'isUnlocked': true,
   },
 ];

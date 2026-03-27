@@ -1,25 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../mocks/mock_child.dart';
+import '../../../core/providers/profile_provider.dart';
+import '../../../core/providers/name_provider.dart';
 import '../../../mocks/mock_badges.dart';
-import '../../../mocks/mock_hadith.dart';
 import '../../../mocks/mock_progress.dart';
-import '../../../shared/widgets/arabic_text.dart';
-import '../../../shared/widgets/nur_card.dart';
-import '../../../shared/widgets/progress_bar.dart';
+import '../../../mocks/mock_surahs.dart';
 import '../../../shared/widgets/badge_card.dart';
+import '../../../shared/widgets/progress_bar.dart';
+import '../../../shared/widgets/weekly_bar_chart.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final child = mockChild;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileType = ref.watch(profileProvider);
+
+    if (profileType == ProfileType.adult) {
+      return const _AdultHome();
+    }
+    return const _ChildHome();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHILD HOME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _ChildHome extends ConsumerWidget {
+  const _ChildHome();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userName = ref.watch(nameProvider);
     final badges = mockBadges;
     final progress = mockProgress;
 
@@ -29,55 +48,23 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Header(child: child).animate().fadeIn(duration: 400.ms),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Devam Et kartı
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: _ContinueCard(progress: progress),
-            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.15),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Elif-Ba kartı
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: const _ElifBaCard(),
-            ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.15),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Keşfet başlığı
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text('Keşfet', style: AppTextStyles.titleLarge),
-            ),
-
-            const SizedBox(height: AppSpacing.xs),
-
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: _ModuleGrid(progress: progress),
-            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.15),
-
-            const SizedBox(height: AppSpacing.sm),
-
-            // Hadis & Sünnet kartı
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: const _HadithCard(),
-            ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.15),
+            // ─── Header ────────────────────────────────────────────────
+            _ChildHeader(userName: userName)
+                .animate()
+                .fadeIn(duration: 400.ms),
 
             const SizedBox(height: AppSpacing.md),
 
-            // Rozetler başlığı
+            // ─── 2×2 Modül grid ────────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: _ChildModuleGrid(progress: progress),
+            ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ─── Rozetlerim ────────────────────────────────────────────
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -117,9 +104,9 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
-            ).animate().fadeIn(delay: 300.ms),
+            ).animate().fadeIn(delay: 200.ms),
 
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -127,21 +114,23 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── Child Header ─────────────────────────────────────────────────────────────
 
-class _Header extends StatelessWidget {
-  const _Header({required this.child});
+class _ChildHeader extends ConsumerWidget {
+  const _ChildHeader({required this.userName});
 
-  final Map<String, dynamic> child;
+  final String userName;
 
   @override
-  Widget build(BuildContext context) {
-    final name = child['name'] as String;
-    final streak = child['streakDays'] as int;
-    final ayahsDone = child['todayAyahsCompleted'] as int;
-    final ayahsGoal = child['todayAyahsGoal'] as int;
-    final minDone = child['todayMinutes'] as int;
-    final minGoal = child['dailyGoalMinutes'] as int;
+  Widget build(BuildContext context, WidgetRef ref) {
+    const streak = 7;
+    const ayahsDone = 3;
+    const ayahsGoal = 5;
+    const minDone = 12;
+    const minGoal = 20;
+
+    final greeting =
+        userName.isNotEmpty ? 'Merhaba, $userName! ✨' : 'Merhaba! ✨';
 
     return Container(
       decoration: const BoxDecoration(
@@ -159,16 +148,14 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Merhaba, $name! ✨',
+                          greeting,
                           style: AppTextStyles.headlineMedium.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.w800,
@@ -176,7 +163,7 @@ class _Header extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Bugün $minDone/$minGoal dk tamamlandı',
+                          'Bugün $minDone/$minGoal dk',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.white.withValues(alpha: 0.8),
                           ),
@@ -184,7 +171,7 @@ class _Header extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Ebeveyn butonu
+                  // Ayarlar → parent dashboard
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
@@ -196,14 +183,12 @@ class _Header extends StatelessWidget {
                         color: AppColors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.supervisor_account_rounded,
+                      child: const Icon(Icons.settings_outlined,
                           color: AppColors.white, size: 20),
                     ),
                   ),
-
                   const SizedBox(width: AppSpacing.sm),
-
-                  // Streak badge
+                  // Streak
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.sm, vertical: 6),
@@ -215,7 +200,7 @@ class _Header extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text('🔥',
-                            style: TextStyle(fontSize: 18)),
+                            style: TextStyle(fontSize: 16)),
                         const SizedBox(width: 4),
                         Text(
                           '$streak gün',
@@ -230,41 +215,51 @@ class _Header extends StatelessWidget {
 
               const SizedBox(height: AppSpacing.md),
 
-              // Günlük hedef kartı
+              // Günlük hedef
               Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: AppColors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Günlük Hedef',
-                          style: AppTextStyles.labelLarge
-                              .copyWith(color: AppColors.white),
-                        ),
-                        Text(
-                          '$ayahsDone/$ayahsGoal Ayet',
-                          style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.9)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: ayahsDone / ayahsGoal,
-                        minHeight: 10,
-                        backgroundColor:
-                            AppColors.white.withValues(alpha: 0.3),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.white),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Günlük Hedef',
+                                style: AppTextStyles.labelLarge
+                                    .copyWith(color: AppColors.white),
+                              ),
+                              Text(
+                                '$ayahsDone/$ayahsGoal Ayet',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                    color: AppColors.white
+                                        .withValues(alpha: 0.85)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: LinearProgressIndicator(
+                              value: ayahsDone / ayahsGoal,
+                              minHeight: 8,
+                              backgroundColor:
+                                  AppColors.white.withValues(alpha: 0.3),
+                              valueColor:
+                                  const AlwaysStoppedAnimation<Color>(
+                                      AppColors.white),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -278,298 +273,110 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ─── Devam Et kartı ──────────────────────────────────────────────────────────
+// ─── Child Module Grid ────────────────────────────────────────────────────────
 
-class _ContinueCard extends StatelessWidget {
-  const _ContinueCard({required this.progress});
+class _ChildModuleGrid extends StatelessWidget {
+  const _ChildModuleGrid({required this.progress});
 
   final Map<String, dynamic> progress;
 
   @override
   Widget build(BuildContext context) {
-    final completed = progress['surahsCompleted'] as int;
-    final total = progress['surahsTotal'] as int;
+    // İlerleme olan sure — Sureler kartında progress göstermek için
+    final inProgressSurah = mockSurahs
+        .where((s) =>
+            (s['progress'] as double) > 0 &&
+            (s['progress'] as double) < 1.0)
+        .firstOrNull;
 
-    return NurCard(
-      onTap: () => context.go('/child/surahs/al-fatiha'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          // Sol: bilgi
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Devam Et',
-                      style: AppTextStyles.labelLarge
-                          .copyWith(color: AppColors.primary),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: AppColors.primary, size: 16),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Al-Fatiha Sûresi',
-                  style: AppTextStyles.titleLarge,
-                ),
-                const SizedBox(height: 2),
-                ArabicText(
-                  'الفاتحة',
-                  fontSize: 20,
-                  color: AppColors.textMuted,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ProgressBar(value: 3 / 7),
-                const SizedBox(height: 4),
-                Text(
-                  '$completed/$total Sure tamamlandı',
-                  style: AppTextStyles.labelSmall,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: AppSpacing.md),
-
-          // Sağ: ikon
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.primaryBg,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: Text('📖', style: TextStyle(fontSize: 32)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Elif-Ba kartı ───────────────────────────────────────────────────────────
-
-class _ElifBaCard extends StatelessWidget {
-  const _ElifBaCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return NurCard(
-      onTap: () => context.go('/child/hareke'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          // Sol: bilgi
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Elif-Ba Öğren',
-                      style: AppTextStyles.labelLarge
-                          .copyWith(color: AppColors.primary),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: AppColors.primary, size: 16),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text('Hareke Öğrenimi', style: AppTextStyles.titleLarge),
-                const SizedBox(height: 2),
-                Text(
-                  '28 harf · Fetha, Damme, Kasra, Sükun',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.textMuted),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ProgressBar(value: 2 / 28),
-                const SizedBox(height: 4),
-                Text('2/28 harf öğrenildi',
-                    style: AppTextStyles.labelSmall),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: AppSpacing.md),
-
-          // Sağ: Arapça harf görseli
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: AppColors.primaryBg,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: ArabicText(
-                'أبت',
-                fontSize: 22,
-                textAlign: TextAlign.center,
-                color: AppColors.primary,
+    return Column(
+      children: [
+        // Üst sıra: Sureler + Dualar
+        Row(
+          children: [
+            Expanded(
+              child: _ChildModuleCard(
+                emoji: '📖',
+                title: 'Sureler',
+                stat: '${progress['surahsCompleted']}/${progress['surahsTotal']} tamamlandı',
+                bgColor: AppColors.primaryBg,
+                accentColor: AppColors.primary,
+                route: '/child/surahs',
+                progressValue: inProgressSurah != null
+                    ? inProgressSurah['progress'] as double
+                    : null,
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _ChildModuleCard(
+                emoji: '🤲',
+                title: 'Dualar',
+                stat: '${progress['duasLearned']}/${progress['duasTotal']} öğrenildi',
+                bgColor: AppColors.duaBg,
+                accentColor: AppColors.dua,
+                route: '/child/duas',
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Alt sıra: Elif-Ba + Kıssalar
+        Row(
+          children: [
+            Expanded(
+              child: _ChildModuleCard(
+                emoji: 'أ',
+                title: 'Elif-Ba',
+                stat: '2/28 harf',
+                bgColor: AppColors.quizBg,
+                accentColor: AppColors.quiz,
+                route: '/child/hareke',
+                isArabicEmoji: true,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _ChildModuleCard(
+                emoji: '📚',
+                title: 'Kıssalar',
+                stat: '${progress['storiesCompleted']}/${progress['storiesTotal']} kıssa',
+                bgColor: AppColors.rewardBg,
+                accentColor: AppColors.reward,
+                route: '/child/stories',
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.sm),
+
+        // Tam genişlik: Hadis
+        _ChildModuleCardWide(
+          emoji: '📜',
+          title: 'Hadis & Sünnet',
+          stat: 'Hadis ezberi',
+          bgColor: AppColors.coralBg,
+          accentColor: AppColors.coral,
+          route: '/child/hadith',
+        ),
+      ],
     );
   }
 }
 
-// ─── Hadis & Sünnet kartı ────────────────────────────────────────────────────
-
-class _HadithCard extends StatelessWidget {
-  const _HadithCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final learned =
-        mockHadiths.where((h) => h['isLearned'] == true).length;
-    final total = mockHadiths.length;
-
-    return NurCard(
-      onTap: () => context.go('/child/hadith'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          // Sol: bilgi
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Hadis & Sünnet',
-                      style: AppTextStyles.labelLarge
-                          .copyWith(color: AppColors.coral),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: AppColors.coral, size: 16),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text('Hadis Ezberi', style: AppTextStyles.titleLarge),
-                const SizedBox(height: 2),
-                Text(
-                  '$total hadis · Ahlak, İbadet, Sosyal, İlim',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.textMuted),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ProgressBar(
-                  value: total > 0 ? learned / total : 0,
-                  color: AppColors.coral,
-                  backgroundColor: AppColors.coralBg,
-                ),
-                const SizedBox(height: 4),
-                Text('$learned/$total hadis ezberlendi',
-                    style: AppTextStyles.labelSmall),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: AppSpacing.md),
-
-          // Sağ: ikon
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: AppColors.coralBg,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: Text('📜', style: TextStyle(fontSize: 32)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── 2×2 Modül grid ──────────────────────────────────────────────────────────
-
-class _ModuleGrid extends StatelessWidget {
-  const _ModuleGrid({required this.progress});
-
-  final Map<String, dynamic> progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final modules = [
-      _ModuleItem(
-        emoji: '📖',
-        title: 'Sureler',
-        stat:
-            '${progress['surahsCompleted']}/${progress['surahsTotal']} tamamlandı',
-        bgColor: AppColors.primaryBg,
-        accentColor: AppColors.primary,
-        route: '/child/surahs',
-        locked: false,
-      ),
-      _ModuleItem(
-        emoji: '🤲',
-        title: 'Dualar',
-        stat:
-            '${progress['duasLearned']}/${progress['duasTotal']} öğrenildi',
-        bgColor: AppColors.duaBg,
-        accentColor: AppColors.dua,
-        route: '/child/duas',
-        locked: false,
-      ),
-      _ModuleItem(
-        emoji: '⭐',
-        title: 'Quiz',
-        stat: 'Oyna!',
-        bgColor: AppColors.quizBg,
-        accentColor: AppColors.quiz,
-        route: '/child/surahs',
-        locked: false,
-      ),
-      _ModuleItem(
-        emoji: '📚',
-        title: 'Kıssalar',
-        stat: 'Pro',
-        bgColor: AppColors.rewardBg,
-        accentColor: AppColors.reward,
-        route: '/child/stories',
-        locked: true,
-      ),
-    ];
-
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: AppSpacing.sm,
-      mainAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 1.45,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: modules.map((m) => _ModuleCard(item: m)).toList(),
-    );
-  }
-}
-
-class _ModuleItem {
-  const _ModuleItem({
+class _ChildModuleCard extends StatelessWidget {
+  const _ChildModuleCard({
     required this.emoji,
     required this.title,
     required this.stat,
     required this.bgColor,
     required this.accentColor,
     required this.route,
-    required this.locked,
+    this.progressValue,
+    this.isArabicEmoji = false,
   });
 
   final String emoji;
@@ -578,72 +385,576 @@ class _ModuleItem {
   final Color bgColor;
   final Color accentColor;
   final String route;
-  final bool locked;
-}
-
-class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.item});
-
-  final _ModuleItem item;
+  final double? progressValue;
+  final bool isArabicEmoji;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go(item.route),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.go(route);
+      },
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: item.bgColor,
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(item.emoji,
-                    style: const TextStyle(fontSize: 32)),
-                if (item.locked)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: item.accentColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+            isArabicEmoji
+                ? Text(
+                    emoji,
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.lock_rounded,
-                            size: 11, color: item.accentColor),
-                        const SizedBox(width: 3),
-                        Text(
-                          'Pro',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: item.accentColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              item.title,
-              style: AppTextStyles.titleMedium,
-            ),
+                  )
+                : Text(emoji,
+                    style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(title, style: AppTextStyles.titleMedium),
             const SizedBox(height: 2),
             Text(
-              item.stat,
-              style: AppTextStyles.labelSmall.copyWith(
-                color: item.accentColor,
-                fontWeight: FontWeight.w500,
+              stat,
+              style: AppTextStyles.labelSmall
+                  .copyWith(color: accentColor),
+            ),
+            if (progressValue != null) ...[
+              const SizedBox(height: 8),
+              ProgressBar(value: progressValue!, color: accentColor),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChildModuleCardWide extends StatelessWidget {
+  const _ChildModuleCardWide({
+    required this.emoji,
+    required this.title,
+    required this.stat,
+    required this.bgColor,
+    required this.accentColor,
+    required this.route,
+  });
+
+  final String emoji;
+  final String title;
+  final String stat;
+  final Color bgColor;
+  final Color accentColor;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.go(route);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.titleMedium),
+                  Text(
+                    stat,
+                    style: AppTextStyles.labelSmall
+                        .copyWith(color: accentColor),
+                  ),
+                ],
               ),
             ),
+            Icon(Icons.chevron_right_rounded,
+                color: accentColor, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADULT HOME
+// ═══════════════════════════════════════════════════════════════════════════════
+
+class _AdultHome extends ConsumerWidget {
+  const _AdultHome();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userName = ref.watch(nameProvider);
+    final progress = mockProgress;
+    final thisWeek = {
+      'totalMinutes': 95,
+      'dailyMinutes': [8, 15, 12, 20, 18, 10, 12],
+    };
+    final dailyMinutes =
+        (thisWeek['dailyMinutes'] as List).cast<int>();
+
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ─── Header ──────────────────────────────────────────────
+            _AdultHeader(userName: userName)
+                .animate()
+                .fadeIn(duration: 400.ms),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ─── 3'lü istatistik ─────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                children: [
+                  _StatChip(
+                    icon: '⏱',
+                    label: 'Bu hafta',
+                    value: '${thisWeek['totalMinutes']} dk',
+                    color: AppColors.primaryBg,
+                    accentColor: AppColors.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _StatChip(
+                    icon: '📖',
+                    label: 'Sureler',
+                    value:
+                        '${progress['surahsCompleted']}/${progress['surahsTotal']}',
+                    color: AppColors.primaryBg,
+                    accentColor: AppColors.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _StatChip(
+                    icon: '⭐',
+                    label: 'Yıldızlar',
+                    value: '${progress['totalStars']}',
+                    color: AppColors.rewardBg,
+                    accentColor: AppColors.reward,
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(delay: 100.ms),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ─── Haftalık grafik ─────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Bu Hafta',
+                          style: AppTextStyles.titleLarge),
+                      Text(
+                        '${thisWeek['totalMinutes']} dk toplam',
+                        style: AppTextStyles.labelSmall,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(
+                    height: 120,
+                    child: WeeklyBarChart(
+                      data: dailyMinutes,
+                      todayIndex: 6,
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(delay: 200.ms),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ─── İçerik erişimi ──────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text('İçerik', style: AppTextStyles.titleLarge),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
+            _ContentList(progress: progress)
+                .animate()
+                .fadeIn(delay: 300.ms),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            // ─── Ayarlar kısayolu ────────────────────────────────────
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: _SettingsShortcut(),
+            ).animate().fadeIn(delay: 400.ms),
+
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Adult Header ─────────────────────────────────────────────────────────────
+
+class _AdultHeader extends ConsumerWidget {
+  const _AdultHeader({required this.userName});
+
+  final String userName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final greeting =
+        userName.isNotEmpty ? 'Hoş Geldiniz, $userName' : 'Hoş Geldiniz';
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.parent,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      greeting,
+                      style: AppTextStyles.headlineMedium.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Yetişkin modu • İlerleme takibi',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Mod değiştir
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(profileProvider.notifier).state =
+                      ProfileType.child;
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('⭐',
+                          style: TextStyle(fontSize: 14)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Çocuk Modu',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: AppColors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Stat Chip ────────────────────────────────────────────────────────────────
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.accentColor,
+  });
+
+  final String icon;
+  final String label;
+  final String value;
+  final Color color;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: AppTextStyles.titleLarge
+                  .copyWith(color: accentColor),
+            ),
+            Text(label, style: AppTextStyles.labelSmall),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Content List ─────────────────────────────────────────────────────────────
+
+class _ContentList extends StatelessWidget {
+  const _ContentList({required this.progress});
+
+  final Map<String, dynamic> progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _ContentItem(
+        emoji: '📖',
+        title: 'Sureler',
+        stat:
+            '${progress['surahsCompleted']}/${progress['surahsTotal']} tamamlandı',
+        route: '/child/surahs',
+        progressValue: (progress['surahsCompleted'] as int) /
+            (progress['surahsTotal'] as int),
+        color: AppColors.primaryBg,
+        accentColor: AppColors.primary,
+      ),
+      _ContentItem(
+        emoji: '🤲',
+        title: 'Dualar',
+        stat:
+            '${progress['duasLearned']}/${progress['duasTotal']} öğrenildi',
+        route: '/child/duas',
+        progressValue: (progress['duasLearned'] as int) /
+            (progress['duasTotal'] as int),
+        color: AppColors.duaBg,
+        accentColor: AppColors.dua,
+      ),
+      _ContentItem(
+        emoji: '📚',
+        title: 'Kıssalar',
+        stat:
+            '${progress['storiesCompleted']}/${progress['storiesTotal']} kıssa',
+        route: '/child/stories',
+        progressValue: 0.0,
+        color: AppColors.rewardBg,
+        accentColor: AppColors.reward,
+      ),
+      _ContentItem(
+        emoji: '📜',
+        title: 'Hadis & Sünnet',
+        stat: 'Hadis ezberi',
+        route: '/child/hadith',
+        progressValue: 0.1,
+        color: AppColors.coralBg,
+        accentColor: AppColors.coral,
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C2C2A).withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              _ContentRow(item: items[i]),
+              if (i < items.length - 1)
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md),
+                  color: AppColors.border,
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContentItem {
+  const _ContentItem({
+    required this.emoji,
+    required this.title,
+    required this.stat,
+    required this.route,
+    required this.progressValue,
+    required this.color,
+    required this.accentColor,
+  });
+
+  final String emoji;
+  final String title;
+  final String stat;
+  final String route;
+  final double progressValue;
+  final Color color;
+  final Color accentColor;
+}
+
+class _ContentRow extends StatelessWidget {
+  const _ContentRow({required this.item});
+
+  final _ContentItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go(item.route),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: item.color,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(item.emoji,
+                    style: const TextStyle(fontSize: 22)),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.title, style: AppTextStyles.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(item.stat,
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: item.accentColor)),
+                  const SizedBox(height: 6),
+                  ProgressBar(
+                    value: item.progressValue,
+                    color: item.accentColor,
+                    backgroundColor: item.color,
+                    height: 4,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Settings Shortcut ────────────────────────────────────────────────────────
+
+class _SettingsShortcut extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => context.go('/parent/dashboard'),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C2C2A).withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.settings_outlined,
+                  color: AppColors.textMuted, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Ayarlar', style: AppTextStyles.titleMedium),
+                  Text('Süre limiti, bildirimler, PIN',
+                      style: AppTextStyles.labelSmall),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted),
           ],
         ),
       ),

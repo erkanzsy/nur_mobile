@@ -8,389 +8,278 @@ import '../../../mocks/mock_surahs.dart';
 import '../../../shared/widgets/arabic_text.dart';
 import '../../../shared/widgets/audio_player_widget.dart';
 
-class SurahLearnScreen extends StatefulWidget {
+class SurahLearnScreen extends StatelessWidget {
   const SurahLearnScreen({super.key, required this.surahId});
 
   final String surahId;
 
   @override
-  State<SurahLearnScreen> createState() => _SurahLearnScreenState();
-}
-
-class _SurahLearnScreenState extends State<SurahLearnScreen> {
-  int _currentIndex = 0;
-  final _pageController = PageController();
-
-  late final Map<String, dynamic> _surah;
-  late final List<Map<String, dynamic>> _ayahs;
-
-  @override
-  void initState() {
-    super.initState();
-    _surah = mockSurahs.firstWhere(
-      (s) => s['id'] == widget.surahId,
+  Widget build(BuildContext context) {
+    final surah = mockSurahs.firstWhere(
+      (s) => s['id'] == surahId,
       orElse: () => mockSurahs.first,
     );
-    _ayahs = (_surah['ayahs'] as List).cast<Map<String, dynamic>>();
-  }
+    final ayahs =
+        (surah['ayahs'] as List).cast<Map<String, dynamic>>();
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _goToPage(int index) {
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_ayahs.isEmpty) {
+    if (ayahs.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(_surah['nameTr'] as String)),
-        body: const Center(child: Text('İçerik henüz eklenmedi.')),
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          title: Text(surah['nameTr'] as String),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+        body: const Center(
+          child: Text('İçerik henüz eklenmedi.'),
+        ),
       );
     }
-
-    final currentAyah = _ayahs[_currentIndex];
-    final isFirst = _currentIndex == 0;
-    final isLast = _currentIndex == _ayahs.length - 1;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Column(
         children: [
-          // ─── Header ──────────────────────────────────────────────
-          _LearnHeader(
-            surah: _surah,
-            currentIndex: _currentIndex,
-            total: _ayahs.length,
-          ),
+          // ─── Header ────────────────────────────────────────────────
+          _LearnHeader(surah: surah, ayahCount: ayahs.length),
 
-          // ─── Ayet içeriği ────────────────────────────────────────
+          // ─── Tüm ayetler — scroll edilebilir ───────────────────────
           Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (i) => setState(() => _currentIndex = i),
-              itemCount: _ayahs.length,
-              itemBuilder: (_, i) => _AyahPage(ayah: _ayahs[i]),
+            child: ListView.builder(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              itemCount: ayahs.length,
+              itemBuilder: (context, i) => _AyahCard(
+                ayah: ayahs[i],
+                isLast: i == ayahs.length - 1,
+              ).animate().fadeIn(
+                    delay: Duration(milliseconds: i * 60),
+                    duration: 400.ms,
+                  ),
             ),
           ),
 
-          // ─── Alt kontroller ──────────────────────────────────────
-          Container(
-            color: AppColors.white,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              children: [
-                // Ses oynatıcı
-                AudioPlayerWidget(
-                  audioUrl: currentAyah['audioUrl'] as String?,
-                  label: 'Dinle',
-                ),
+          // ─── Alt bar: ses + quiz ────────────────────────────────────
+          _BottomBar(surahId: surahId),
+        ],
+      ),
+    );
+  }
+}
 
-                const SizedBox(height: AppSpacing.md),
+// ─── Header ───────────────────────────────────────────────────────────────────
 
-                // Önceki / Sonraki
-                Row(
+class _LearnHeader extends StatelessWidget {
+  const _LearnHeader({required this.surah, required this.ayahCount});
+
+  final Map<String, dynamic> surah;
+  final int ayahCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xs, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_rounded,
+                    color: AppColors.white),
+                onPressed: () => context.go('/child/surahs'),
+              ),
+              Expanded(
+                child: Column(
                   children: [
-                    if (!isFirst)
-                      Expanded(
-                        child: _NavButton(
-                          label: 'Önceki',
-                          icon: Icons.arrow_back_rounded,
-                          onTap: () => _goToPage(_currentIndex - 1),
-                          primary: false,
-                        ),
-                      ),
-                    if (!isFirst) const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      flex: isFirst ? 1 : 1,
-                      child: _NavButton(
-                        label: isLast ? 'Tamamlandı' : 'Sonraki',
-                        icon: isLast
-                            ? Icons.check_rounded
-                            : Icons.arrow_forward_rounded,
-                        onTap: isLast
-                            ? () => context.go('/child/surahs')
-                            : () => _goToPage(_currentIndex + 1),
-                        primary: true,
-                      ),
+                    Text(
+                      surah['nameTr'] as String,
+                      style: AppTextStyles.titleLarge
+                          .copyWith(color: AppColors.white),
+                    ),
+                    Text(
+                      '$ayahCount Ayet',
+                      style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.white.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
+              ),
+              ArabicText(
+                surah['nameAr'] as String,
+                fontSize: 22,
+                color: AppColors.white.withValues(alpha: 0.9),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-                const SizedBox(height: AppSpacing.sm),
+// ─── Ayet Kartı ───────────────────────────────────────────────────────────────
 
-                // Progress dots
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _ayahs.length,
-                    (i) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: _currentIndex == i ? 20 : 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _currentIndex == i
-                            ? AppColors.primary
-                            : AppColors.border,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+class _AyahCard extends StatelessWidget {
+  const _AyahCard({required this.ayah, required this.isLast});
+
+  final Map<String, dynamic> ayah;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Ayet numarası — üst sağ
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${ayah['number']}',
+                      style: AppTextStyles.labelLarge
+                          .copyWith(color: AppColors.primary),
                     ),
                   ),
                 ),
-
-                const SizedBox(height: AppSpacing.sm),
               ],
             ),
           ),
 
-          // ─── Quiz banner ─────────────────────────────────────────
-          GestureDetector(
-            onTap: () => context.go('/child/quiz/${widget.surahId}'),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              color: AppColors.quizBg,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('⭐', style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Hazır hissediyorsan Quiz\'e geç!',
-                    style: AppTextStyles.labelLarge
-                        .copyWith(color: AppColors.quiz),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  const Icon(Icons.arrow_forward_rounded,
-                      color: AppColors.quiz, size: 18),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Learn Header ─────────────────────────────────────────────────────────────
-
-class _LearnHeader extends StatelessWidget {
-  const _LearnHeader({
-    required this.surah,
-    required this.currentIndex,
-    required this.total,
-  });
-
-  final Map<String, dynamic> surah;
-  final int currentIndex;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-            AppSpacing.sm, AppSpacing.sm, AppSpacing.md, 0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.close_rounded),
-              onPressed: () => context.go('/child/surahs'),
-              color: AppColors.textPrimary,
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Text(
-                    surah['nameTr'] as String,
-                    style: AppTextStyles.titleMedium,
-                  ),
-                  Text(
-                    '${currentIndex + 1}/$total Ayet',
-                    style: AppTextStyles.labelSmall,
-                  ),
-                ],
-              ),
-            ),
-            ArabicText(
-              surah['nameAr'] as String,
-              fontSize: 20,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Ayet sayfası ─────────────────────────────────────────────────────────────
-
-class _AyahPage extends StatelessWidget {
-  const _AyahPage({required this.ayah});
-
-  final Map<String, dynamic> ayah;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        children: [
-          // Ayet numarası
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBg,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${ayah['number']}',
-                style: AppTextStyles.labelLarge
-                    .copyWith(color: AppColors.primary),
-              ),
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .scale(begin: const Offset(0.8, 0.8)),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // Arapça metin kutusu
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
-            ),
+          // Arapça metin
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
             child: ArabicText(
               ayah['arabic'] as String,
-              fontSize: 30,
+              fontSize: 28,
               textAlign: TextAlign.center,
             ),
-          )
-              .animate()
-              .fadeIn(delay: 100.ms, duration: 400.ms)
-              .slideY(begin: 0.1),
+          ),
 
-          const SizedBox(height: AppSpacing.lg),
+          // Ayraç
+          Container(
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            color: AppColors.border,
+          ),
 
           // Transliterasyon
-          Text(
-            ayah['transliteration'] as String,
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.primary,
-              fontStyle: FontStyle.italic,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
+            child: Text(
+              ayah['transliteration'] as String,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          )
-              .animate()
-              .fadeIn(delay: 200.ms, duration: 400.ms),
-
-          const SizedBox(height: AppSpacing.md),
+          ),
 
           // Türkçe anlam
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
             child: Text(
-              '"${ayah['turkish']}"',
-              style: AppTextStyles.bodyLarge
+              ayah['turkish'] as String,
+              style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
-          )
-              .animate()
-              .fadeIn(delay: 300.ms, duration: 400.ms),
+          ),
         ],
       ),
     );
   }
 }
 
-// ─── Nav button ───────────────────────────────────────────────────────────────
+// ─── Alt Bar ──────────────────────────────────────────────────────────────────
 
-class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    required this.primary,
-  });
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({required this.surahId});
 
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool primary;
+  final String surahId;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.sm + 4,
-          horizontal: AppSpacing.md,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Ses oynatıcı
+        Container(
+          color: AppColors.white,
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+          child: const AudioPlayerWidget(audioUrl: null, label: 'Tüm Sureyi Dinle'),
         ),
-        decoration: BoxDecoration(
-          color: primary ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: primary
-              ? null
-              : Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!primary) ...[
-              Icon(icon,
-                  color: AppColors.textMuted, size: 18),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: AppTextStyles.labelLarge.copyWith(
-                color: primary ? AppColors.white : AppColors.textMuted,
-              ),
+
+        // Quiz banner
+        GestureDetector(
+          onTap: () => context.go('/child/quiz/$surahId'),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
             ),
-            if (primary) ...[
-              const SizedBox(width: 6),
-              Icon(icon, color: AppColors.white, size: 18),
-            ],
-          ],
+            color: AppColors.quizBg,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('⭐', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Hazır hissediyorsan Quiz\'e geç!',
+                  style: AppTextStyles.labelLarge
+                      .copyWith(color: AppColors.quiz),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                const Icon(Icons.arrow_forward_rounded,
+                    color: AppColors.quiz, size: 16),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

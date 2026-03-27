@@ -9,9 +9,9 @@ import 'features/hadith/presentation/hadith_learn_screen.dart';
 import 'features/hadith/presentation/hadith_list_screen.dart';
 import 'features/hareke/presentation/hareke_learn_screen.dart';
 import 'features/parent/presentation/parent_dashboard_screen.dart';
-import 'features/paywall/presentation/paywall_screen.dart';
 import 'features/quiz/presentation/quiz_screen.dart';
 import 'features/stories/presentation/story_list_screen.dart';
+import 'features/support/presentation/support_screen.dart';
 import 'features/surahs/presentation/surah_learn_screen.dart';
 import 'features/surahs/presentation/surah_list_screen.dart';
 
@@ -27,8 +27,13 @@ final router = GoRouter(
       builder: (context, state) => const ParentDashboardScreen(),
     ),
     GoRoute(
+      path: '/support',
+      builder: (context, state) => const SupportScreen(),
+    ),
+    // Keep /paywall path so old references still work
+    GoRoute(
       path: '/paywall',
-      builder: (context, state) => const PaywallScreen(),
+      builder: (context, state) => const SupportScreen(),
     ),
     ShellRoute(
       builder: (context, state, child) => ChildShell(child: child),

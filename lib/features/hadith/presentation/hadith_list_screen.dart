@@ -6,7 +6,6 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../mocks/mock_hadith.dart';
 import '../../../shared/widgets/arabic_text.dart';
-import '../../../shared/widgets/locked_content_sheet.dart';
 
 class HadithListScreen extends StatefulWidget {
   const HadithListScreen({super.key});
@@ -196,36 +195,23 @@ class _HadithCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnlocked = hadith['isUnlocked'] as bool;
     final isLearned = hadith['isLearned'] as bool;
     final category = hadith['category'] as String;
 
     return GestureDetector(
-      onTap: () {
-        if (isUnlocked) {
-          context.go('/child/hadith/${hadith['id']}');
-        } else {
-          LockedContentSheet.show(context);
-        }
-      },
+      onTap: () => context.go('/child/hadith/${hadith['id']}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isUnlocked ? AppColors.white : AppColors.surface,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isUnlocked ? Colors.transparent : AppColors.border,
-          ),
-          boxShadow: isUnlocked
-              ? [
-                  BoxShadow(
-                    color:
-                        const Color(0xFF2C2C2A).withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -234,26 +220,17 @@ class _HadithCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isLearned
-                    ? AppColors.primaryBg
-                    : isUnlocked
-                        ? AppColors.coralBg
-                        : AppColors.border,
+                color: isLearned ? AppColors.primaryBg : AppColors.coralBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: isUnlocked
-                    ? Icon(
-                        isLearned
-                            ? Icons.check_rounded
-                            : Icons.format_quote_rounded,
-                        color: isLearned
-                            ? AppColors.primary
-                            : AppColors.coral,
-                        size: 20,
-                      )
-                    : const Icon(Icons.lock_rounded,
-                        color: AppColors.textMuted, size: 18),
+                child: Icon(
+                  isLearned
+                      ? Icons.check_rounded
+                      : Icons.format_quote_rounded,
+                  color: isLearned ? AppColors.primary : AppColors.coral,
+                  size: 20,
+                ),
               ),
             ),
 
@@ -270,9 +247,7 @@ class _HadithCard extends StatelessWidget {
                         child: Text(
                           hadith['nameTr'] as String,
                           style: AppTextStyles.titleMedium.copyWith(
-                            color: isUnlocked
-                                ? AppColors.textPrimary
-                                : AppColors.textMuted,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -281,13 +256,8 @@ class _HadithCard extends StatelessWidget {
                         _StatusChip(
                             label: 'Ezberlendi',
                             color: AppColors.primary,
-                            bgColor: AppColors.primaryBg),
-                      if (!isUnlocked)
-                        _StatusChip(
-                            label: 'Pro',
-                            color: AppColors.textMuted,
-                            bgColor: AppColors.border),
-                      if (isUnlocked && !isLearned)
+                            bgColor: AppColors.primaryBg)
+                      else
                         _CategoryChip(category: category),
                     ],
                   ),
@@ -295,29 +265,23 @@ class _HadithCard extends StatelessWidget {
                   ArabicText(
                     hadith['arabic'] as String,
                     fontSize: 15,
-                    color: isUnlocked
-                        ? AppColors.textMuted
-                        : AppColors.border,
+                    color: AppColors.textMuted,
                     textAlign: TextAlign.right,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     hadith['source'] as String,
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: isUnlocked
-                          ? AppColors.coral
-                          : AppColors.border,
+                      color: AppColors.coral,
                     ),
                   ),
                 ],
               ),
             ),
 
-            if (isUnlocked) ...[
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textMuted),
-            ],
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted),
           ],
         ),
       ),

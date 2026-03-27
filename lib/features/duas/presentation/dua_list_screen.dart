@@ -6,7 +6,6 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../mocks/mock_duas.dart';
 import '../../../shared/widgets/arabic_text.dart';
-import '../../../shared/widgets/locked_content_sheet.dart';
 
 class DuaListScreen extends StatefulWidget {
   const DuaListScreen({super.key});
@@ -44,30 +43,30 @@ class _DuaListScreenState extends State<DuaListScreen> {
           _DuaHeader(learned: learned, total: mockDuas.length),
 
           // Kategori filtresi
-          SizedBox(
-            height: 44,
-            child: ListView(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.sm, AppSpacing.md, 0),
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              children: _categories.map((cat) {
-                final selected = _selectedCategory == cat.$1;
-                return GestureDetector(
-                  onTap: () =>
-                      setState(() => _selectedCategory = cat.$1),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: AppSpacing.sm),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.dua : AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: selected ? AppColors.dua : AppColors.border,
+              child: Row(
+                children: _categories.map((cat) {
+                  final selected = _selectedCategory == cat.$1;
+                  return GestureDetector(
+                    onTap: () =>
+                        setState(() => _selectedCategory = cat.$1),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: selected ? AppColors.dua : AppColors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color:
+                              selected ? AppColors.dua : AppColors.border,
+                        ),
                       ),
-                    ),
-                    child: Center(
                       child: Text(
                         cat.$2,
                         style: AppTextStyles.labelLarge.copyWith(
@@ -77,13 +76,13 @@ class _DuaListScreenState extends State<DuaListScreen> {
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
 
           // Liste
           Expanded(
@@ -188,34 +187,22 @@ class _DuaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnlocked = dua['isUnlocked'] as bool;
     final isLearned = dua['isLearned'] as bool;
 
     return GestureDetector(
-      onTap: () {
-        if (isUnlocked) {
-          context.go('/child/duas/${dua['id']}');
-        } else {
-          LockedContentSheet.show(context);
-        }
-      },
+      onTap: () => context.go('/child/duas/${dua['id']}'),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isUnlocked ? AppColors.white : AppColors.surface,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isUnlocked ? Colors.transparent : AppColors.border,
-          ),
-          boxShadow: isUnlocked
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [],
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -224,24 +211,17 @@ class _DuaCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: isLearned
-                    ? AppColors.primaryBg
-                    : isUnlocked
-                        ? AppColors.duaBg
-                        : AppColors.border,
+                color: isLearned ? AppColors.primaryBg : AppColors.duaBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: isUnlocked
-                    ? Icon(
+                child: Icon(
                         isLearned
                             ? Icons.check_rounded
                             : Icons.volunteer_activism_outlined,
                         color: isLearned ? AppColors.primary : AppColors.dua,
                         size: 20,
-                      )
-                    : const Icon(Icons.lock_rounded,
-                        color: AppColors.textMuted, size: 18),
+                      ),
               ),
             ),
 
@@ -257,9 +237,7 @@ class _DuaCard extends StatelessWidget {
                       Text(
                         dua['nameTr'] as String,
                         style: AppTextStyles.titleMedium.copyWith(
-                          color: isUnlocked
-                              ? AppColors.textPrimary
-                              : AppColors.textMuted,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       if (isLearned)
@@ -278,40 +256,22 @@ class _DuaCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if (!isUnlocked)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.border,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Pro',
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.textMuted),
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 2),
                   ArabicText(
                     dua['arabic'] as String,
                     fontSize: 16,
-                    color: isUnlocked
-                        ? AppColors.textMuted
-                        : AppColors.border,
+                    color: AppColors.textMuted,
                     textAlign: TextAlign.left,
                   ),
                 ],
               ),
             ),
 
-            if (isUnlocked) ...[
-              const SizedBox(width: AppSpacing.sm),
-              const Icon(Icons.chevron_right_rounded,
-                  color: AppColors.textMuted),
-            ],
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted),
           ],
         ),
       ),

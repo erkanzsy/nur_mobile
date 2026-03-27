@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
+import '../../../core/providers/profile_provider.dart';
+import '../../../core/providers/name_provider.dart';
 import '../../../mocks/mock_parent.dart';
 import '../../../mocks/mock_progress.dart';
 import '../../../shared/widgets/weekly_bar_chart.dart';
 
-class ParentDashboardScreen extends StatefulWidget {
+class ParentDashboardScreen extends ConsumerStatefulWidget {
   const ParentDashboardScreen({super.key});
 
   @override
-  State<ParentDashboardScreen> createState() =>
+  ConsumerState<ParentDashboardScreen> createState() =>
       _ParentDashboardScreenState();
 }
 
-class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
+class _ParentDashboardScreenState
+    extends ConsumerState<ParentDashboardScreen> {
   bool _notifEnabled = true;
   int _dailyLimit = 30;
 
@@ -30,7 +34,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final child = mockParent['child'] as Map<String, dynamic>;
+    final userName = ref.watch(nameProvider);
     final thisWeek = mockParent['thisWeek'] as Map<String, dynamic>;
     final dailyMinutes =
         (thisWeek['dailyMinutes'] as List).cast<int>();
@@ -43,15 +47,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           children: [
             // ─── Koyu header ────────────────────────────────────────
             _ParentHeader(
-              childName: child['name'] as String,
+              userName: userName,
               onClose: () => context.go('/child/home'),
             ),
 
-            // ─── Çocuk profil kartı ─────────────────────────────────
+            // ─── Profil kartı ────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
-              child: _ChildProfileCard(
-                child: child,
+              child: _ProfileSummaryCard(
+                userName: userName,
                 thisWeek: thisWeek,
               ),
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1),
@@ -108,54 +112,101 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             const SizedBox(height: AppSpacing.sm),
 
             _SettingsCard(
-              child: Column(
-                children: [
-                  // Günlük süre limiti
-                  _SettingRow(
-                    icon: Icons.timer_outlined,
-                    title: 'Günlük Süre Limiti',
-                    subtitle: '$_dailyLimit dakika',
-                    trailing: _LimitControl(
-                      value: _dailyLimit,
-                      onChanged: (v) => setState(() => _dailyLimit = v),
+              child: Builder(builder: (context) {
+                final profileType = ref.watch(profileProvider);
+                final isChild = profileType == ProfileType.child;
+                return Column(
+                  children: [
+                    // Profil modu
+                    _SettingRow(
+                      icon: Icons.person_outline_rounded,
+                      title: 'Kullanım Modu',
+                      subtitle: isChild ? 'Çocuk Modu' : 'Yetişkin Modu',
+                      trailing: GestureDetector(
+                        onTap: () {
+                          ref.read(profileProvider.notifier).state = isChild
+                              ? ProfileType.adult
+                              : ProfileType.child;
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isChild
+                                ? AppColors.primaryBg
+                                : AppColors.rewardBg,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            isChild ? '⭐ Çocuk' : '📖 Yetişkin',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: isChild
+                                  ? AppColors.primary
+                                  : AppColors.reward,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  _Divider(),
-                  // Bildirimler
-                  _SettingRow(
-                    icon: Icons.notifications_outlined,
-                    title: 'Hatırlatıcı Bildirimi',
-                    subtitle: 'Her gün saat 18:00',
-                    trailing: Switch.adaptive(
-                      value: _notifEnabled,
-                      onChanged: (v) =>
-                          setState(() => _notifEnabled = v),
-                      activeThumbColor: AppColors.primary,
-                      activeTrackColor: AppColors.primaryLight,
+                    _Divider(),
+                    // Günlük süre limiti
+                    _SettingRow(
+                      icon: Icons.timer_outlined,
+                      title: 'Günlük Süre Limiti',
+                      subtitle: '$_dailyLimit dakika',
+                      trailing: _LimitControl(
+                        value: _dailyLimit,
+                        onChanged: (v) => setState(() => _dailyLimit = v),
+                      ),
                     ),
-                  ),
-                  _Divider(),
-                  // PIN
-                  _SettingRow(
-                    icon: Icons.lock_outline_rounded,
-                    title: 'Ebeveyn PIN\'i',
-                    subtitle: 'Kapalı',
-                    trailing: const Icon(Icons.chevron_right_rounded,
-                        color: AppColors.textMuted),
-                    onTap: () {},
-                  ),
-                  _Divider(),
-                  // Dil
-                  _SettingRow(
-                    icon: Icons.language_outlined,
-                    title: 'Dil',
-                    subtitle: 'Türkçe',
-                    trailing: const Icon(Icons.chevron_right_rounded,
-                        color: AppColors.textMuted),
-                    onTap: () {},
-                  ),
-                ],
-              ),
+                    _Divider(),
+                    // Bildirimler
+                    _SettingRow(
+                      icon: Icons.notifications_outlined,
+                      title: 'Hatırlatıcı Bildirimi',
+                      subtitle: 'Her gün saat 18:00',
+                      trailing: Switch.adaptive(
+                        value: _notifEnabled,
+                        onChanged: (v) =>
+                            setState(() => _notifEnabled = v),
+                        activeThumbColor: AppColors.primary,
+                        activeTrackColor: AppColors.primaryLight,
+                      ),
+                    ),
+                    _Divider(),
+                    // PIN
+                    _SettingRow(
+                      icon: Icons.lock_outline_rounded,
+                      title: 'Ebeveyn PIN\'i',
+                      subtitle: 'Kapalı',
+                      trailing: const Icon(Icons.chevron_right_rounded,
+                          color: AppColors.textMuted),
+                      onTap: () {},
+                    ),
+                    _Divider(),
+                    // Dil
+                    _SettingRow(
+                      icon: Icons.language_outlined,
+                      title: 'Dil',
+                      subtitle: 'Türkçe',
+                      trailing: const Icon(Icons.chevron_right_rounded,
+                          color: AppColors.textMuted),
+                      onTap: () {},
+                    ),
+                    _Divider(),
+                    // Destekle
+                    _SettingRow(
+                      icon: Icons.favorite_outline_rounded,
+                      title: 'Nûr\'u Destekle',
+                      subtitle: 'Reklamsız kalmamıza yardım et',
+                      trailing: const Icon(Icons.chevron_right_rounded,
+                          color: AppColors.textMuted),
+                      onTap: () => context.push('/support'),
+                    ),
+                  ],
+                );
+              }),
             ).animate().fadeIn(delay: 400.ms),
 
             const SizedBox(height: AppSpacing.xl),
@@ -169,16 +220,17 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 // ─── Parent Header ───────────────────────────────────────────────────────────
 
 class _ParentHeader extends StatelessWidget {
-  const _ParentHeader({
-    required this.childName,
-    required this.onClose,
-  });
+  const _ParentHeader({required this.userName, required this.onClose});
 
-  final String childName;
+  final String userName;
   final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
+    final subtitle = userName.isNotEmpty
+        ? '$userName\'in ilerleme ve ayarları'
+        : 'İlerleme ve ayarlar';
+
     return Container(
       color: AppColors.parent,
       child: SafeArea(
@@ -200,12 +252,12 @@ class _ParentHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ebeveyn Panosu',
+                      'Ayarlar',
                       style: AppTextStyles.headlineMedium
                           .copyWith(color: AppColors.white),
                     ),
                     Text(
-                      '$childName\'in gelişimi',
+                      subtitle,
                       style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.white.withValues(alpha: 0.7)),
                     ),
@@ -225,19 +277,24 @@ class _ParentHeader extends StatelessWidget {
   }
 }
 
-// ─── Child Profile Card ──────────────────────────────────────────────────────
+// ─── Profile Summary Card ─────────────────────────────────────────────────────
 
-class _ChildProfileCard extends StatelessWidget {
-  const _ChildProfileCard({
-    required this.child,
+class _ProfileSummaryCard extends ConsumerWidget {
+  const _ProfileSummaryCard({
+    required this.userName,
     required this.thisWeek,
   });
 
-  final Map<String, dynamic> child;
+  final String userName;
   final Map<String, dynamic> thisWeek;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileType = ref.watch(profileProvider);
+    final isChild = profileType == ProfileType.child;
+    final displayName =
+        userName.isNotEmpty ? userName : (isChild ? 'Anonim' : 'Kullanıcı');
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -250,7 +307,6 @@ class _ChildProfileCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Avatar
           Container(
             width: 60,
             height: 60,
@@ -260,7 +316,7 @@ class _ChildProfileCard extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                child['avatar'] as String,
+                isChild ? '⭐' : '📖',
                 style: const TextStyle(fontSize: 28),
               ),
             ),
@@ -271,17 +327,77 @@ class _ChildProfileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  child['name'] as String,
+                  displayName,
                   style: AppTextStyles.titleLarge
                       .copyWith(color: AppColors.white),
                 ),
                 Text(
-                  '${child['age']} yaşında • ${child['streakDays']} gün seri 🔥',
+                  '${isChild ? 'Çocuk Modu' : 'Yetişkin Modu'} • 7 gün seri 🔥',
                   style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.white.withValues(alpha: 0.85)),
                 ),
               ],
             ),
+          ),
+          // İsim düzenleme
+          GestureDetector(
+            onTap: () => _showNameEditDialog(context, ref, userName),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.edit_outlined,
+                  color: AppColors.white, size: 18),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNameEditDialog(
+      BuildContext context, WidgetRef ref, String current) {
+    final ctrl = TextEditingController(text: current);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        title: const Text('İsmi Değiştir'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: InputDecoration(
+            hintText: 'Kerem, Erkan, Ahmet...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('İptal',
+                style: TextStyle(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(nameProvider.notifier).state =
+                  ctrl.text.trim();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Kaydet',
+                style: TextStyle(color: AppColors.primary)),
           ),
         ],
       ),
