@@ -4,46 +4,50 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../mocks/mock_duas.dart';
+import '../../../mocks/mock_hadith.dart';
 import '../../../shared/widgets/arabic_text.dart';
 import '../../../shared/widgets/locked_content_sheet.dart';
 
-class DuaListScreen extends StatefulWidget {
-  const DuaListScreen({super.key});
+class HadithListScreen extends StatefulWidget {
+  const HadithListScreen({super.key});
 
   @override
-  State<DuaListScreen> createState() => _DuaListScreenState();
+  State<HadithListScreen> createState() => _HadithListScreenState();
 }
 
-class _DuaListScreenState extends State<DuaListScreen> {
+class _HadithListScreenState extends State<HadithListScreen> {
   String _selectedCategory = 'all';
 
   static const _categories = [
     ('all', 'Tümü'),
-    ('daily', 'Günlük'),
-    ('morning', 'Sabah'),
-    ('sleep', 'Uyku'),
+    ('ahlak', 'Ahlak'),
+    ('ibadet', 'İbadet'),
+    ('sosyal', 'Sosyal'),
+    ('ilim', 'İlim'),
   ];
 
   List<Map<String, dynamic>> get _filtered {
-    if (_selectedCategory == 'all') return mockDuas;
-    return mockDuas
-        .where((d) => d['category'] == _selectedCategory)
+    if (_selectedCategory == 'all') return mockHadiths;
+    return mockHadiths
+        .where((h) => h['category'] == _selectedCategory)
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final learned = mockDuas.where((d) => d['isLearned'] == true).length;
+    final learned =
+        mockHadiths.where((h) => h['isLearned'] == true).length;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Column(
         children: [
-          // Header
-          _DuaHeader(learned: learned, total: mockDuas.length),
+          // ─── Header ──────────────────────────────────────────────
+          _HadithHeader(learned: learned, total: mockHadiths.length),
 
-          // Kategori filtresi
+          const SizedBox(height: AppSpacing.sm),
+
+          // ─── Kategori filtresi ────────────────────────────────────
           SizedBox(
             height: 44,
             child: ListView(
@@ -61,10 +65,13 @@ class _DuaListScreenState extends State<DuaListScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: selected ? AppColors.dua : AppColors.white,
+                      color:
+                          selected ? AppColors.coral : AppColors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: selected ? AppColors.dua : AppColors.border,
+                        color: selected
+                            ? AppColors.coral
+                            : AppColors.border,
                       ),
                     ),
                     child: Center(
@@ -83,9 +90,9 @@ class _DuaListScreenState extends State<DuaListScreen> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
 
-          // Liste
+          // ─── Liste ────────────────────────────────────────────────
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(
@@ -94,8 +101,8 @@ class _DuaListScreenState extends State<DuaListScreen> {
               itemCount: _filtered.length,
               separatorBuilder: (_, _) =>
                   const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, i) => _DuaCard(
-                dua: _filtered[i],
+              itemBuilder: (context, i) => _HadithCard(
+                hadith: _filtered[i],
               ).animate().fadeIn(delay: (i * 50).ms).slideX(begin: 0.1),
             ),
           ),
@@ -105,10 +112,10 @@ class _DuaListScreenState extends State<DuaListScreen> {
   }
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────────────────
 
-class _DuaHeader extends StatelessWidget {
-  const _DuaHeader({required this.learned, required this.total});
+class _HadithHeader extends StatelessWidget {
+  const _HadithHeader({required this.learned, required this.total});
 
   final int learned;
   final int total;
@@ -116,14 +123,14 @@ class _DuaHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.dua,
+      color: AppColors.coral,
       child: SafeArea(
         bottom: false,
         child: Container(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
           decoration: const BoxDecoration(
-            color: AppColors.dua,
+            color: AppColors.coral,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(28),
               bottomRight: Radius.circular(28),
@@ -136,14 +143,15 @@ class _DuaHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Dualar',
+                      'Hadis & Sünnet',
                       style: AppTextStyles.headlineLarge
                           .copyWith(color: AppColors.white),
                     ),
                     Text(
-                      '$learned/$total dua öğrenildi',
+                      '$learned/$total hadis ezberlendi',
                       style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.8)),
+                          color:
+                              AppColors.white.withValues(alpha: 0.85)),
                     ),
                   ],
                 ),
@@ -155,11 +163,11 @@ class _DuaHeader extends StatelessWidget {
                     width: 56,
                     height: 56,
                     child: CircularProgressIndicator(
-                      value: learned / total,
+                      value: total > 0 ? learned / total : 0,
                       backgroundColor:
-                          AppColors.white.withValues(alpha: 0.2),
-                      valueColor:
-                          const AlwaysStoppedAnimation(AppColors.white),
+                          AppColors.white.withValues(alpha: 0.25),
+                      valueColor: const AlwaysStoppedAnimation(
+                          AppColors.white),
                       strokeWidth: 5,
                       strokeCap: StrokeCap.round,
                     ),
@@ -179,22 +187,23 @@ class _DuaHeader extends StatelessWidget {
   }
 }
 
-// ─── Dua Card ─────────────────────────────────────────────────────────────────
+// ─── Hadis Kartı ──────────────────────────────────────────────────────────────
 
-class _DuaCard extends StatelessWidget {
-  const _DuaCard({required this.dua});
+class _HadithCard extends StatelessWidget {
+  const _HadithCard({required this.hadith});
 
-  final Map<String, dynamic> dua;
+  final Map<String, dynamic> hadith;
 
   @override
   Widget build(BuildContext context) {
-    final isUnlocked = dua['isUnlocked'] as bool;
-    final isLearned = dua['isLearned'] as bool;
+    final isUnlocked = hadith['isUnlocked'] as bool;
+    final isLearned = hadith['isLearned'] as bool;
+    final category = hadith['category'] as String;
 
     return GestureDetector(
       onTap: () {
         if (isUnlocked) {
-          context.go('/child/duas/${dua['id']}');
+          context.go('/child/hadith/${hadith['id']}');
         } else {
           LockedContentSheet.show(context);
         }
@@ -210,7 +219,8 @@ class _DuaCard extends StatelessWidget {
           boxShadow: isUnlocked
               ? [
                   BoxShadow(
-                    color: const Color(0xFF2C2C2A).withValues(alpha: 0.04),
+                    color:
+                        const Color(0xFF2C2C2A).withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -219,7 +229,7 @@ class _DuaCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Öğrenildi göstergesi
+            // ─ Sol ikon ─────────────────────────────────────────
             Container(
               width: 44,
               height: 44,
@@ -227,7 +237,7 @@ class _DuaCard extends StatelessWidget {
                 color: isLearned
                     ? AppColors.primaryBg
                     : isUnlocked
-                        ? AppColors.duaBg
+                        ? AppColors.coralBg
                         : AppColors.border,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -236,8 +246,10 @@ class _DuaCard extends StatelessWidget {
                     ? Icon(
                         isLearned
                             ? Icons.check_rounded
-                            : Icons.volunteer_activism_outlined,
-                        color: isLearned ? AppColors.primary : AppColors.dua,
+                            : Icons.format_quote_rounded,
+                        color: isLearned
+                            ? AppColors.primary
+                            : AppColors.coral,
                         size: 20,
                       )
                     : const Icon(Icons.lock_rounded,
@@ -247,61 +259,55 @@ class _DuaCard extends StatelessWidget {
 
             const SizedBox(width: AppSpacing.md),
 
+            // ─ İçerik ───────────────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        dua['nameTr'] as String,
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: isUnlocked
-                              ? AppColors.textPrimary
-                              : AppColors.textMuted,
+                      Expanded(
+                        child: Text(
+                          hadith['nameTr'] as String,
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: isUnlocked
+                                ? AppColors.textPrimary
+                                : AppColors.textMuted,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs),
                       if (isLearned)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBg,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Öğrenildi',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        _StatusChip(
+                            label: 'Ezberlendi',
+                            color: AppColors.primary,
+                            bgColor: AppColors.primaryBg),
                       if (!isUnlocked)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.border,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Pro',
-                            style: AppTextStyles.labelSmall
-                                .copyWith(color: AppColors.textMuted),
-                          ),
-                        ),
+                        _StatusChip(
+                            label: 'Pro',
+                            color: AppColors.textMuted,
+                            bgColor: AppColors.border),
+                      if (isUnlocked && !isLearned)
+                        _CategoryChip(category: category),
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   ArabicText(
-                    dua['arabic'] as String,
-                    fontSize: 16,
+                    hadith['arabic'] as String,
+                    fontSize: 15,
                     color: isUnlocked
                         ? AppColors.textMuted
                         : AppColors.border,
-                    textAlign: TextAlign.left,
+                    textAlign: TextAlign.right,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hadith['source'] as String,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: isUnlocked
+                          ? AppColors.coral
+                          : AppColors.border,
+                    ),
                   ),
                 ],
               ),
@@ -313,6 +319,69 @@ class _DuaCard extends StatelessWidget {
                   color: AppColors.textMuted),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Küçük yardımcı widget'lar ────────────────────────────────────────────────
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.label,
+    required this.color,
+    required this.bgColor,
+  });
+
+  final String label;
+  final Color color;
+  final Color bgColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.category});
+
+  final String category;
+
+  static const _labels = {
+    'ahlak': 'Ahlak',
+    'ibadet': 'İbadet',
+    'sosyal': 'Sosyal',
+    'ilim': 'İlim',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.coralBg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        _labels[category] ?? category,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.coral,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

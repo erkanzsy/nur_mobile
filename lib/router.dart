@@ -5,6 +5,9 @@ import 'features/child/presentation/child_shell.dart';
 import 'features/child/presentation/home_screen.dart';
 import 'features/duas/presentation/dua_learn_screen.dart';
 import 'features/duas/presentation/dua_list_screen.dart';
+import 'features/hadith/presentation/hadith_learn_screen.dart';
+import 'features/hadith/presentation/hadith_list_screen.dart';
+import 'features/hareke/presentation/hareke_learn_screen.dart';
 import 'features/parent/presentation/parent_dashboard_screen.dart';
 import 'features/paywall/presentation/paywall_screen.dart';
 import 'features/quiz/presentation/quiz_screen.dart';
@@ -67,6 +70,20 @@ final router = GoRouter(
         GoRoute(
           path: '/child/badges',
           builder: (context, state) => const BadgesScreen(),
+        ),
+        GoRoute(
+          path: '/child/hareke',
+          builder: (context, state) => const HarekeLearnScreen(),
+        ),
+        GoRoute(
+          path: '/child/hadith',
+          builder: (context, state) => const HadithListScreen(),
+        ),
+        GoRoute(
+          path: '/child/hadith/:id',
+          builder: (context, state) => HadithLearnScreen(
+            hadithId: state.pathParameters['id']!,
+          ),
         ),
       ],
     ),

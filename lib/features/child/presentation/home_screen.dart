@@ -7,6 +7,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../mocks/mock_child.dart';
 import '../../../mocks/mock_badges.dart';
+import '../../../mocks/mock_hadith.dart';
 import '../../../mocks/mock_progress.dart';
 import '../../../shared/widgets/arabic_text.dart';
 import '../../../shared/widgets/nur_card.dart';
@@ -30,7 +31,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             _Header(child: child).animate().fadeIn(duration: 400.ms),
 
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
 
             // Devam Et kartı
             Padding(
@@ -39,16 +40,25 @@ class HomeScreen extends StatelessWidget {
               child: _ContinueCard(progress: progress),
             ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.15),
 
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.sm),
 
-            // Keşfet grid
+            // Elif-Ba kartı
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: const _ElifBaCard(),
+            ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.15),
+
+            const SizedBox(height: AppSpacing.sm),
+
+            // Keşfet başlığı
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Text('Keşfet', style: AppTextStyles.titleLarge),
             ),
 
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.xs),
 
             Padding(
               padding:
@@ -56,7 +66,16 @@ class HomeScreen extends StatelessWidget {
               child: _ModuleGrid(progress: progress),
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.15),
 
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.sm),
+
+            // Hadis & Sünnet kartı
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: const _HadithCard(),
+            ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.15),
+
+            const SizedBox(height: AppSpacing.md),
 
             // Rozetler başlığı
             Padding(
@@ -335,6 +354,151 @@ class _ContinueCard extends StatelessWidget {
   }
 }
 
+// ─── Elif-Ba kartı ───────────────────────────────────────────────────────────
+
+class _ElifBaCard extends StatelessWidget {
+  const _ElifBaCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return NurCard(
+      onTap: () => context.go('/child/hareke'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          // Sol: bilgi
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Elif-Ba Öğren',
+                      style: AppTextStyles.labelLarge
+                          .copyWith(color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded,
+                        color: AppColors.primary, size: 16),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('Hareke Öğrenimi', style: AppTextStyles.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  '28 harf · Fetha, Damme, Kasra, Sükun',
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: AppColors.textMuted),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ProgressBar(value: 2 / 28),
+                const SizedBox(height: 4),
+                Text('2/28 harf öğrenildi',
+                    style: AppTextStyles.labelSmall),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: AppSpacing.md),
+
+          // Sağ: Arapça harf görseli
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: AppColors.primaryBg,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(
+              child: ArabicText(
+                'أبت',
+                fontSize: 22,
+                textAlign: TextAlign.center,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Hadis & Sünnet kartı ────────────────────────────────────────────────────
+
+class _HadithCard extends StatelessWidget {
+  const _HadithCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final learned =
+        mockHadiths.where((h) => h['isLearned'] == true).length;
+    final total = mockHadiths.length;
+
+    return NurCard(
+      onTap: () => context.go('/child/hadith'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          // Sol: bilgi
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Hadis & Sünnet',
+                      style: AppTextStyles.labelLarge
+                          .copyWith(color: AppColors.coral),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded,
+                        color: AppColors.coral, size: 16),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text('Hadis Ezberi', style: AppTextStyles.titleLarge),
+                const SizedBox(height: 2),
+                Text(
+                  '$total hadis · Ahlak, İbadet, Sosyal, İlim',
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: AppColors.textMuted),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ProgressBar(
+                  value: total > 0 ? learned / total : 0,
+                  color: AppColors.coral,
+                  backgroundColor: AppColors.coralBg,
+                ),
+                const SizedBox(height: 4),
+                Text('$learned/$total hadis ezberlendi',
+                    style: AppTextStyles.labelSmall),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: AppSpacing.md),
+
+          // Sağ: ikon
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
+              color: AppColors.coralBg,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Center(
+              child: Text('📜', style: TextStyle(fontSize: 32)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─── 2×2 Modül grid ──────────────────────────────────────────────────────────
 
 class _ModuleGrid extends StatelessWidget {
@@ -389,7 +553,7 @@ class _ModuleGrid extends StatelessWidget {
       crossAxisCount: 2,
       crossAxisSpacing: AppSpacing.sm,
       mainAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 1.1,
+      childAspectRatio: 1.45,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: modules.map((m) => _ModuleCard(item: m)).toList(),

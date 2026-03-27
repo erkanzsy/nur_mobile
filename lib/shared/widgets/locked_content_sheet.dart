@@ -98,7 +98,7 @@ class LockedContentSheet extends StatelessWidget {
             icon: '✨',
             onPressed: () {
               Navigator.pop(context);
-              context.go('/paywall');
+              context.push('/paywall');
             },
           ),
 
