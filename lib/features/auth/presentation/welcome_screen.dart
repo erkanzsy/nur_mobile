@@ -7,6 +7,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/providers/profile_provider.dart';
 import '../../../core/providers/name_provider.dart';
+import '../../../core/services/prefs_service.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -30,7 +31,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   void _onNameDone(String name) {
-    ref.read(nameProvider.notifier).state = name.trim();
+    final trimmed = name.trim();
+    final profile = _selectedProfile ?? ProfileType.child;
+    ref.read(nameProvider.notifier).state = trimmed;
+    ref.read(profileProvider.notifier).state = profile;
+    PrefsService.completeOnboarding(
+      name: trimmed,
+      profileType: profile == ProfileType.child ? 'child' : 'adult',
+    );
     context.go('/child/home');
   }
 

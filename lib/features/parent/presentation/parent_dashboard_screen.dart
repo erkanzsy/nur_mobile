@@ -7,6 +7,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/providers/profile_provider.dart';
 import '../../../core/providers/name_provider.dart';
+import '../../../core/services/prefs_service.dart';
 import '../../../mocks/mock_parent.dart';
 import '../../../mocks/mock_progress.dart';
 import '../../../shared/widgets/weekly_bar_chart.dart';
@@ -124,9 +125,15 @@ class _ParentDashboardScreenState
                       subtitle: isChild ? 'Çocuk Modu' : 'Yetişkin Modu',
                       trailing: GestureDetector(
                         onTap: () {
-                          ref.read(profileProvider.notifier).state = isChild
+                          final next = isChild
                               ? ProfileType.adult
                               : ProfileType.child;
+                          ref.read(profileProvider.notifier).state = next;
+                          PrefsService.completeOnboarding(
+                            name: ref.read(nameProvider),
+                            profileType:
+                                next == ProfileType.child ? 'child' : 'adult',
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(

@@ -44,7 +44,9 @@ class _ChildHome extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      body: SingleChildScrollView(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -109,6 +111,15 @@ class _ChildHome extends ConsumerWidget {
             const SizedBox(height: 100),
           ],
         ),
+          ),
+
+          // ─── Floating destek butonu ───────────────────────────────
+          const Positioned(
+            right: AppSpacing.md,
+            bottom: AppSpacing.xl,
+            child: _FloatingSupportButton(),
+          ),
+        ],
       ),
     );
   }
@@ -956,6 +967,105 @@ class _SettingsShortcut extends ConsumerWidget {
             const Icon(Icons.chevron_right_rounded,
                 color: AppColors.textMuted),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Floating Destek Butonu ───────────────────────────────────────────────────
+
+class _FloatingSupportButton extends StatefulWidget {
+  const _FloatingSupportButton();
+
+  @override
+  State<_FloatingSupportButton> createState() =>
+      _FloatingSupportButtonState();
+}
+
+class _FloatingSupportButtonState extends State<_FloatingSupportButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bobController;
+  late final Animation<double> _bobAnim;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bobController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat(reverse: true);
+
+    _bobAnim = Tween<double>(begin: 0, end: -9).animate(
+      CurvedAnimation(parent: _bobController, curve: Curves.easeInOut),
+    );
+
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _bobController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _visible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 700),
+      child: AnimatedBuilder(
+        animation: _bobAnim,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, _bobAnim.value),
+          child: child,
+        ),
+        child: GestureDetector(
+          onTap: () => context.push('/support'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF2C2C2A).withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text('☕', style: TextStyle(fontSize: 14)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Destek Ol',
+                  style: AppTextStyles.labelLarge
+                      .copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

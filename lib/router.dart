@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'core/services/prefs_service.dart';
 import 'features/auth/presentation/welcome_screen.dart';
 import 'features/child/presentation/badges_screen.dart';
 import 'features/child/presentation/child_shell.dart';
@@ -17,6 +18,16 @@ import 'features/surahs/presentation/surah_list_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/welcome',
+  redirect: (context, state) {
+    final onboarded = PrefsService.onboardingDone;
+    final onWelcome = state.matchedLocation == '/welcome';
+
+    // Onboarding tamamlanmışsa welcome'a gitmesin
+    if (onboarded && onWelcome) return '/child/home';
+    // Tamamlanmamışsa sadece welcome'a izin ver
+    if (!onboarded && !onWelcome) return '/welcome';
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/welcome',
@@ -30,7 +41,6 @@ final router = GoRouter(
       path: '/support',
       builder: (context, state) => const SupportScreen(),
     ),
-    // Keep /paywall path so old references still work
     GoRoute(
       path: '/paywall',
       builder: (context, state) => const SupportScreen(),
